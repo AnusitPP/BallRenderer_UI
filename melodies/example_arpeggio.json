@@ -1,0 +1,21 @@
+{
+  "name": "Example Arpeggio",
+  "notes": [
+    60,
+    64,
+    67,
+    72,
+    67,
+    64,
+    62,
+    65,
+    69,
+    74,
+    69,
+    65
+  ],
+  "instrument": "pluck",
+  "volume": 0.75,
+  "loop": true,
+  "restart_on_break": true
+}

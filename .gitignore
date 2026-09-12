@@ -1,0 +1,72 @@
+# ==========================================
+# Circle Ball Renderer - Git Ignore
+# ==========================================
+
+# 1. Image Files (รูปภาพทั้งหมด)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.bmp
+*.ico
+*.svg
+*.tiff
+preview_circle.png
+
+# 2. Test Files & Cache (ไฟล์ทดสอบและแคช)
+tests/
+test_*.py
+*_test.py
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 3. Video & Media Output Files (คลิปวิดีโอและไฟล์เสียงที่เรนเดอร์)
+output/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.flv
+*.wmv
+*.m4v
+*.wav
+*.mp3
+*.aac
+*.ogg
+*.flac
+
+# 4. Build Artifacts & Virtual Environments (ไฟล์ที่สร้างจากการ Build และ Environment)
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+build/
+dist/
+*.spec
+
+# Python Cache & Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+
+# IDE & OS Generated Files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & Temporary Files
+*.log
+scratch/

@@ -1,0 +1,36 @@
+{
+  "name": "Pattern Demo",
+  "defaults": {
+    "gap_enabled": true,
+    "gap_size": 42,
+    "gap_position": -90,
+    "spike_count": 3
+  },
+  "events": [
+    {
+      "time": 0,
+      "rotation_speed": 0.85
+    },
+    {
+      "time": 4,
+      "gap_position": 0,
+      "gravity": 1050
+    },
+    {
+      "time": 8,
+      "gap_position": 90,
+      "spike_count": 5
+    },
+    {
+      "time": 12,
+      "gap_position": 180,
+      "rotation_speed": -1.2,
+      "speed_growth": 1.006
+    },
+    {
+      "time": 16,
+      "gap_position": -90,
+      "max_speed": 1900
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+ใส่รูปบอลที่นี่
+1.webp = LV1
+2.webp = LV2
+3.webp = LV3
+4.webp = LV4
+5.webp = LV5
+6.webp = LV6
+7.webp = LV7
+8.webp = LV8
+รองรับ PNG/JPG/JPEG/WEBP

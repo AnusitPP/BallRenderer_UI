@@ -1,8 +1,0 @@
-v19
-- แก้ WinError 206 บน Windows
-- ไม่ส่ง -i ไฟล์เสียงซ้ำตามจำนวน Merge อีกต่อไป
-- Decode MP3/WAV/M4A/AAC ที่เลือกเป็น PCM
-- วางเสียงทุก Merge ลง audio timeline เดียว
-- เรียก FFmpeg ขั้นสุดท้ายด้วย input เพียง 2 ไฟล์: video + timeline.wav
-- จำนวน Merge มากไม่ทำให้ command line ยาวขึ้น
-- ข้อความ HIGHEST LV ยังคงถูกซ่อน

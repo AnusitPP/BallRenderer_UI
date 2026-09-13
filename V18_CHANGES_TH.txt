@@ -1,5 +1,0 @@
-v18
-- แก้เสียง MP3 ตอน Merge: หา FFmpeg จาก PATH, FFMPEG_EXE, ffmpeg.exe ในโปรเจกต์ และ path FFmpeg เดิมของเครื่อง
-- ไฟล์ MP3/WAV/M4A/AAC ที่เลือกจะถูกวางตาม timestamp ของการ Merge
-- ซ่อนข้อความ HIGHEST LV บนวิดีโอ Merge
-- ข้อความ Victory ยังแสดงเมื่อ LV8 + LV8

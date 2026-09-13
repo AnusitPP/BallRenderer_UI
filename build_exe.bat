@@ -106,7 +106,10 @@ echo Building BallRenderer.exe...
   --onefile ^
   --windowed ^
   --name BallRenderer ^
-  app.py
+  --collect-all PySide6 ^
+  --add-data "patterns;patterns" ^
+  --add-data "melodies;melodies" ^
+  studio.py
 
 if errorlevel 1 (
     echo Build failed.

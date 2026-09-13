@@ -85,6 +85,18 @@ pip install -r requirements.txt
 
 ## วิธีการเปิดใช้งาน (How to Run)
 
+### Renderer Studio V2 (PySide6)
+
+เปิดหน้าต่างใหม่ตาม Figma V2 ด้วย:
+
+```powershell
+python studio.py
+```
+
+หรือดับเบิลคลิก `RUN_STUDIO_V2.bat` เพื่อเปิดโปรแกรมโดยไม่ต้องพิมพ์คำสั่ง
+
+หน้าต่างนี้ใช้ `CircleSimulation` เดียวกับ final renderer สำหรับ Live Preview และใช้ `QProcess` สำหรับ Render MP4 ส่วน `python app.py` ยังคงเปิด UI เดิมเพื่อความเข้ากันได้
+
 ### 1. เปิดผ่าน UI โดยตรง (ไม่ต้อง Build)
 - ดับเบิลคลิกที่ไฟล์ **`run_ui.bat`**
 - หรือรันผ่านคำสั่ง Python:

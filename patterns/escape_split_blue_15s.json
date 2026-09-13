@@ -1,0 +1,35 @@
+{
+  "name": "Escape Split - Blue Ball Chance at 15s",
+  "description": "Escape Split preset based on the supplied command. Every 20th dynamically spawned ball becomes blue.",
+  "defaults": {
+    "gap_enabled": true,
+    "gap_size": 14,
+    "gap_position": 99,
+    "spike_count": 0,
+    "rotation_speed": 5.85,
+    "gravity": 900,
+    "speed_growth": 1.028,
+    "max_speed": 2340,
+    "growth": 0,
+    "ball_color_mode": "same",
+    "show_ball_numbers": false,
+    "special_spawn_interval": 20,
+    "special_spawn_color": "#4da6ff"
+  },
+  "events": [],
+  "launch": {
+    "fps": 120,
+    "seconds": 45,
+    "width": 1080,
+    "height": 1920,
+    "substeps": 6,
+    "initial_angle": 107,
+    "initial_speed": 1142,
+    "ball_count": 1,
+    "base_radius": 35,
+    "escape_duplicate": 1,
+    "rainbow_border": 1,
+    "audio": 1,
+    "audio_mode": "synth"
+  }
+}

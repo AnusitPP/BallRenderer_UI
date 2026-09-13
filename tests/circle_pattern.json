@@ -1,0 +1,1 @@
+{"name": "baseline", "defaults": {"gravity": 900}, "events": [{"time": 2, "gravity": 500, "spike_count": 8}, {"time": 5, "gravity": 1200, "gap_enabled": true, "gap_size": 60}]}

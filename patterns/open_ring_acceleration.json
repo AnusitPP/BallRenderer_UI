@@ -1,0 +1,21 @@
+{
+  "name": "Open Ring - One Ball Acceleration",
+  "defaults": {
+    "gap_enabled": true,
+    "gap_size": 10,
+    "gap_position": -90,
+    "spike_count": 0,
+    "growth": 0,
+    "speed_growth": 1.004,
+    "max_speed": 1750,
+    "ball_color_mode": "same",
+    "show_ball_numbers": false
+  },
+  "events": [
+    { "time": 0, "gravity": 900, "speed_growth": 1.004, "max_speed": 1750 },
+    { "time": 5, "speed_growth": 1.006, "max_speed": 1900 },
+    { "time": 10, "speed_growth": 1.008, "max_speed": 2100 },
+    { "time": 15, "speed_growth": 1.010, "max_speed": 2300 },
+    { "time": 20, "speed_growth": 1.012, "max_speed": 2500 }
+  ]
+}

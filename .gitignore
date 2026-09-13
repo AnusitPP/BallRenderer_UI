@@ -15,9 +15,6 @@
 preview_circle.png
 
 # 2. Test Files & Cache (ไฟล์ทดสอบและแคช)
-tests/
-test_*.py
-*_test.py
 .pytest_cache/
 .coverage
 htmlcov/
@@ -70,3 +67,4 @@ desktop.ini
 # Logs & Temporary Files
 *.log
 scratch/
+.superpowers/

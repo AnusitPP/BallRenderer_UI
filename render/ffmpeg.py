@@ -16,6 +16,7 @@ def find_ffmpeg(search_root=None, *, bundled_root=None, configured_path=None):
         root = Path(search_root)
         candidates = [root / 'bin' / 'ffmpeg.exe', *sorted(root.glob('ffmpeg-*/bin/ffmpeg.exe'), reverse=True)]
         return next((str(p) for p in candidates if p.is_file()), shutil.which('ffmpeg'))
+    use_default_locations = bundled_root is None
     base = Path(bundled_root) if bundled_root is not None else (
         Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parents[1]
     )
@@ -25,6 +26,11 @@ def find_ffmpeg(search_root=None, *, bundled_root=None, configured_path=None):
     if getattr(sys, '_MEIPASS', None):
         candidates.extend([Path(sys._MEIPASS) / name, Path(sys._MEIPASS) / 'bin' / name])
     candidates.append(configured_path)
+    user_profile = os.environ.get('USERPROFILE')
+    if use_default_locations and user_profile and os.name == 'nt':
+        downloads = Path(user_profile) / 'Downloads'
+        candidates.extend(sorted(downloads.glob('ffmpeg-*/bin/ffmpeg.exe'), reverse=True))
+        candidates.append(downloads / 'ffmpeg' / 'bin' / 'ffmpeg.exe')
     return next((str(Path(p).expanduser()) for p in candidates if p and Path(p).expanduser().is_file()), None)
 
 

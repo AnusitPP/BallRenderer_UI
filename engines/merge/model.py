@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import cv2, numpy as np
 
-LEVEL_RADII = {1:24,2:30,3:37,4:45,5:54,6:64,7:75,8:88}
+LEVEL_RADII = {1:24,2:30,3:37,4:45,5:54,6:64,7:75,8:88,9:102}
 
 def level_radius(level, percent=0.0):
     base = LEVEL_RADII[int(level)]
@@ -13,7 +13,7 @@ def level_radius(level, percent=0.0):
 
 LEVEL_COLORS = {
 1:(80,80,255),2:(80,180,255),3:(80,255,180),4:(80,255,255),
-5:(255,180,80),6:(255,100,180),7:(220,100,255),8:(255,255,255)}
+5:(255,180,80),6:(255,100,180),7:(220,100,255),8:(255,255,255),9:(80,220,255)}
 EXTS = (".webp",".png",".jpg",".jpeg")
 
 def skin_path(folder, level):
@@ -25,7 +25,7 @@ def skin_path(folder, level):
 
 def load_skins(folder):
     out={}
-    for lv in range(1,9):
+    for lv in range(1,10):
         p=skin_path(folder,lv)
         if p:
             im=cv2.imread(str(p),cv2.IMREAD_UNCHANGED)
@@ -44,7 +44,7 @@ class Ball:
     def mass(self): return max(1.0,(self.r/24.0)**2)
 
 def same_level_merge(a,b):
-    return (not a.pending and not b.pending and a.level==b.level)
+    return (not a.pending and not b.pending and a.level==b.level and a.level<9)
 
 def momentum_velocity(a,b):
     m=a.mass+b.mass

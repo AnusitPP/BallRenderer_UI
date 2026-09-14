@@ -9,6 +9,9 @@ class MergeSimulation:
         cx=W//2; cy=int(H*0.62); R=int(min(W*0.455,H*0.34) * args.tank_scale)
         # Pipe inner width follows LV1 diameter plus adjustable clearance.
         pipe_w=int(LEVEL_RADII[1] * 2 + args.pipe_clearance)
+        pipe_count=max(1,min(3,int(getattr(args,'pipe_count',1))))
+        pipe_span=min(R*.48,max(0,(pipe_count-1)*(pipe_w+12)/2))
+        pipe_centers=[cx] if pipe_count==1 else [cx-pipe_span+(2*pipe_span*i/(pipe_count-1)) for i in range(pipe_count)]
         pipe_top=max(30,cy-R-int(H*0.22))
         opening_y=cy-R
         skins=load_skins(args.assets)
@@ -22,6 +25,9 @@ class MergeSimulation:
         self.cy=cy
         self.R=R
         self.pipe_w=pipe_w
+        self.pipe_centers=pipe_centers
+        self.spawn_pipe_history=[]
+        self.spawn_index=0
         self.pipe_top=pipe_top
         self.opening_y=opening_y
         self.skins=skins
@@ -65,6 +71,7 @@ class MergeSimulation:
         cy=self.cy
         R=self.R
         pipe_w=self.pipe_w
+        pipe_centers=self.pipe_centers
         pipe_top=self.pipe_top
         opening_y=self.opening_y
         skins=self.skins
@@ -77,8 +84,11 @@ class MergeSimulation:
         victory_t=self.victory_t
         rng=self.rng
         sound_events=self.sound_events
+        spawn_index=self.spawn_index
         if not victory and t>=spawn_t:
-            balls.append(Ball(cx+rng.uniform(-pipe_w*.15,pipe_w*.15),pipe_top+30,rng.uniform(-18,18),0,1,next_id,percent=args.level_size_percent))
+            pipe_x=pipe_centers[spawn_index%len(pipe_centers)]; spawn_index+=1
+            self.spawn_pipe_history.append(pipe_x)
+            balls.append(Ball(pipe_x+rng.uniform(-pipe_w*.15,pipe_w*.15),pipe_top+30,rng.uniform(-18,18),0,1,next_id,percent=args.level_size_percent))
             next_id+=1; spawn_t += args.spawn_interval
         # integrate
         for b in balls:
@@ -87,14 +97,15 @@ class MergeSimulation:
             r=b.r
             # pipe walls while above circle opening
             if b.y < opening_y+r:
-                left=cx-pipe_w/2+r; right=cx+pipe_w/2-r
+                pipe_x=min(pipe_centers,key=lambda value:abs(value-b.x))
+                left=pipe_x-pipe_w/2+r; right=pipe_x+pipe_w/2-r
                 if b.x<left: b.x=left; b.vx=abs(b.vx)*args.bounce
                 if b.x>right: b.x=right; b.vx=-abs(b.vx)*args.bounce
             # circular tank collision, except permanent top opening
             dx=b.x-cx; dy=b.y-cy; d=math.hypot(dx,dy) or 1
             if d+r>R:
                 angle=math.atan2(dy,dx)
-                at_top = dy<0 and circle_pipe_opening_contains(b.x,cx,pipe_w,r) and b.y <= opening_y+r*1.8
+                at_top = dy<0 and any(circle_pipe_opening_contains(b.x,pipe_x,pipe_w,r) for pipe_x in pipe_centers) and b.y <= opening_y+r*1.8
                 if not at_top:
                     nx,ny=dx/d,dy/d
                     b.x=cx+nx*(R-r); b.y=cy+ny*(R-r)
@@ -136,8 +147,9 @@ class MergeSimulation:
                 vx,vy=momentum_velocity(a,b)
                 if a.level==8:
                     victory=True; victory_t=t
-                    sound_events.append((t,8,True))
-                    effects.append([mx,my,0.0,8,1.0])
+                    sound_events.append((t,9,True))
+                    new.append(Ball(mx,my,vx,vy,9,next_id,percent=args.level_size_percent)); next_id+=1
+                    effects.append([mx,my,0.0,9,1.0])
                 else:
                     lv=a.level+1
                     sound_events.append((t,lv,False))
@@ -165,6 +177,7 @@ class MergeSimulation:
         self.victory_t=victory_t
         self.rng=rng
         self.sound_events=sound_events
+        self.spawn_index=spawn_index
         return self.state
 
     def draw_frame(self, width=None, height=None):
@@ -175,6 +188,7 @@ class MergeSimulation:
         cy=self.cy
         R=self.R
         pipe_w=self.pipe_w
+        pipe_centers=self.pipe_centers
         pipe_top=self.pipe_top
         opening_y=self.opening_y
         skins=self.skins
@@ -193,9 +207,11 @@ class MergeSimulation:
         cv2.circle(img,(cx,cy),R,(230,230,230),4,cv2.LINE_AA)
         # erase the circle segment under pipe, then draw straight open pipe sides
         y=openning_y=opening_y
-        cv2.rectangle(img,(cx-pipe_w//2-4,y-12),(cx+pipe_w//2+4,y+16),(0,0,0),-1)
-        cv2.line(img,(cx-pipe_w//2,pipe_top),(cx-pipe_w//2,y),(230,230,230),4,cv2.LINE_AA)
-        cv2.line(img,(cx+pipe_w//2,pipe_top),(cx+pipe_w//2,y),(230,230,230),4,cv2.LINE_AA)
+        for pipe_x in pipe_centers:
+            pipe_x=int(round(pipe_x))
+            cv2.rectangle(img,(pipe_x-pipe_w//2-4,y-12),(pipe_x+pipe_w//2+4,y+16),(0,0,0),-1)
+            cv2.line(img,(pipe_x-pipe_w//2,pipe_top),(pipe_x-pipe_w//2,y),(230,230,230),4,cv2.LINE_AA)
+            cv2.line(img,(pipe_x+pipe_w//2,pipe_top),(pipe_x+pipe_w//2,y),(230,230,230),4,cv2.LINE_AA)
         for b in balls:
             c=LEVEL_COLORS[b.level]; x,y=int(b.x),int(b.y); r=int(b.r)
             if not draw_skin(img,skins.get(b.level),x,y,r):
@@ -209,11 +225,6 @@ class MergeSimulation:
                 d=rr*.75
                 px=int(ex+math.cos(ang)*d); py=int(ey+math.sin(ang)*d)
                 cv2.circle(img,(px,py),max(1,int(4*alpha)),col,-1,cv2.LINE_AA)
-        if victory:
-            text="VICTORY  LV8 + LV8"
-            (tw,_),_=cv2.getTextSize(text,cv2.FONT_HERSHEY_SIMPLEX,1.1,3)
-            cv2.putText(img,text,((W-tw)//2,H//2),cv2.FONT_HERSHEY_SIMPLEX,1.1,(255,255,255),3,cv2.LINE_AA)
-
         if width is not None or height is not None:
             width=int(width or round(W*height/H))
             height=int(height or round(H*width/W))

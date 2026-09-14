@@ -22,4 +22,6 @@ def test_merge_image_folder_picker_updates_preview_engine(tmp_path,monkeypatch):
     window=MainWindow(); window.select_mode('Merge Ball'); window.choose_merge_assets()
     assert window.merge_assets_path==str(tmp_path)
     assert window.engine.config.assets==str(tmp_path)
+    window.pipe_count.setValue(3); window._reset_engine()
+    assert len(window.engine.pipe_centers)==3
     window.close(); assert app is not None

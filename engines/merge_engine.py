@@ -64,7 +64,7 @@ def render(args):
                 sim.advance_frame()
                 writer.write(sim.draw_frame())
                 if fi % max(1,frames//100)==0:
-                    report_progress(90*(fi+1)/max(1,frames),'Merge Ball LV1-8')
+                    report_progress(90*(fi+1)/max(1,frames),'Merge Ball LV1-9')
         finally:
             writer.release()
         audio=None
@@ -96,6 +96,7 @@ def cli(argv=None):
     p.add_argument("--gravity",type=float,default=980); p.add_argument("--bounce",type=float,default=.78)
     p.add_argument("--tank-scale",type=float,default=1.0)
     p.add_argument("--pipe-clearance",type=float,default=8.0)
+    p.add_argument("--pipe-count",type=int,choices=(1,2,3),default=1)
     p.add_argument("--seed",type=int,default=7)
     p.add_argument("--level-size-percent",type=float,default=0.0)
     p.add_argument("--merge-sound",action="store_true")

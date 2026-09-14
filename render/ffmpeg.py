@@ -34,15 +34,15 @@ def find_ffmpeg(search_root=None, *, bundled_root=None, configured_path=None):
     return next((str(Path(p).expanduser()) for p in candidates if p and Path(p).expanduser().is_file()), None)
 
 
-def encode_video(ffmpeg_path, silent_video, audio_wav, final_out, duration_seconds):
+def encode_video(ffmpeg_path, silent_video, audio_wav, final_out, duration_seconds, fast=False):
     """Encode H.264, retry on CPU if an advertised NVENC device cannot run."""
     use_nvenc = ffmpeg_has_nvenc(ffmpeg_path)
     for hardware in ([True, False] if use_nvenc else [False]):
         if audio_wav:
-            cmd = build_ffmpeg_cmd(ffmpeg_path, silent_video, audio_wav, final_out, hardware)
+            cmd = build_ffmpeg_cmd(ffmpeg_path, silent_video, audio_wav, final_out, hardware, fast=fast)
         else:
             cmd = [str(ffmpeg_path), '-y', '-i', str(silent_video)]
-            _append_video_encoder_options(cmd, hardware)
+            _append_video_encoder_options(cmd, hardware, fast=fast)
             cmd += ['-pix_fmt', 'yuv420p', '-an', '-progress', 'pipe:1', '-nostats', str(final_out)]
         try:
             run_ffmpeg_with_progress(cmd, duration_seconds)
@@ -57,11 +57,11 @@ def hidden_process_kwargs():
         return {"creationflags": subprocess.CREATE_NO_WINDOW}
     return {}
 
-def _append_video_encoder_options(cmd, use_nvenc):
+def _append_video_encoder_options(cmd, use_nvenc, fast=False):
     if use_nvenc:
         cmd += [
             "-c:v", "h264_nvenc",
-            "-preset", "p7",
+            "-preset", "p4" if fast else "p7",
             "-tune", "hq",
             "-rc", "vbr",
             "-cq", "15",
@@ -70,7 +70,7 @@ def _append_video_encoder_options(cmd, use_nvenc):
     else:
         cmd += [
             "-c:v", "libx264",
-            "-preset", "medium",
+            "-preset", "veryfast" if fast else "medium",
             "-crf", "15",
         ]
     return cmd
@@ -125,7 +125,7 @@ def ffmpeg_has_nvenc(ffmpeg_path):
     except Exception:
         return False
 
-def build_ffmpeg_cmd(ffmpeg_path, silent_video, audio_wav, final_out, use_nvenc):
+def build_ffmpeg_cmd(ffmpeg_path, silent_video, audio_wav, final_out, use_nvenc, fast=False):
     cmd = [
         ffmpeg_path,
         "-y",
@@ -133,7 +133,7 @@ def build_ffmpeg_cmd(ffmpeg_path, silent_video, audio_wav, final_out, use_nvenc)
         "-i", str(audio_wav),
     ]
 
-    _append_video_encoder_options(cmd, use_nvenc)
+    _append_video_encoder_options(cmd, use_nvenc, fast=fast)
 
     cmd += [
         "-pix_fmt", "yuv420p",

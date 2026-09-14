@@ -3,9 +3,26 @@ import argparse
 import tempfile
 from pathlib import Path
 import cv2
+import math
+import numpy as np
 from engines.merge import *
 from audio.merge import _write_event_wav, _decode_audio_mono, _mix_audio_timeline, audio_mux_plan
 from render.ffmpeg import find_ffmpeg, encode_video, report_progress
+
+
+def align_events_to_video_frames(events,fps):
+    """Map substep events to the frame where their visual result first appears."""
+    rate=max(1,int(fps))
+    return [(math.floor(max(0.0,float(t))*rate+1e-9)/rate,lv,victory) for t,lv,victory in events]
+
+
+def trim_audio_onset(clip,threshold_ratio=.008,preroll_samples=88):
+    if clip is None or len(clip)==0: return clip
+    peak=float(np.max(np.abs(clip)))
+    if peak<=0: return clip
+    audible=np.flatnonzero(np.abs(clip)>=peak*float(threshold_ratio))
+    if len(audible)==0: return clip
+    return clip[max(0,int(audible[0])-int(preroll_samples)):]
 
 
 def mux_merge_audio(video_path, events, args):
@@ -18,11 +35,11 @@ def mux_merge_audio(video_path, events, args):
     video.replace(silent)
     audio=None
     if args.merge_sound and events:
-        merge_clip=_decode_audio_mono(args.merge_sound_file,ffmpeg)
-        victory_clip=_decode_audio_mono(args.victory_sound_file,ffmpeg)
-        _mix_audio_timeline(timeline,events,args.seconds,args.merge_volume,merge_clip,victory_clip)
+        merge_clip=trim_audio_onset(_decode_audio_mono(args.merge_sound_file,ffmpeg))
+        victory_clip=trim_audio_onset(_decode_audio_mono(args.victory_sound_file,ffmpeg))
+        _mix_audio_timeline(timeline,align_events_to_video_frames(events,args.fps),args.seconds,args.merge_volume,merge_clip,victory_clip)
         audio=timeline
-    encode_video(ffmpeg,silent,audio,video,args.seconds)
+    encode_video(ffmpeg,silent,audio,video,args.seconds,fast=True)
     silent.unlink(missing_ok=True)
     timeline.unlink(missing_ok=True)
 
@@ -52,11 +69,12 @@ def render(args):
             writer.release()
         audio=None
         if args.merge_sound and sim.audio_events:
-            merge_clip=_decode_audio_mono(args.merge_sound_file,ffmpeg)
-            victory_clip=_decode_audio_mono(args.victory_sound_file,ffmpeg)
-            _mix_audio_timeline(timeline,sim.audio_events,args.seconds,args.merge_volume,merge_clip,victory_clip)
+            merge_clip=trim_audio_onset(_decode_audio_mono(args.merge_sound_file,ffmpeg))
+            victory_clip=trim_audio_onset(_decode_audio_mono(args.victory_sound_file,ffmpeg))
+            aligned_events=align_events_to_video_frames(sim.audio_events,args.fps)
+            _mix_audio_timeline(timeline,aligned_events,args.seconds,args.merge_volume,merge_clip,victory_clip)
             audio=timeline
-        encode_video(ffmpeg,silent,audio,output,args.seconds)
+        encode_video(ffmpeg,silent,audio,output,args.seconds,fast=True)
         success=True
         report_progress(100,'Complete')
     except KeyboardInterrupt:

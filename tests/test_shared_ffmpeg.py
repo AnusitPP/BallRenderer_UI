@@ -52,3 +52,11 @@ def test_silent_export_still_encodes_h264(monkeypatch):
     assert commands[0].count('-i') == 1
     assert 'libx264' in commands[0]
     assert '-an' in commands[0]
+
+
+def test_fast_encode_uses_faster_preset_without_changing_default(monkeypatch):
+    ff = service(); commands=[]
+    monkeypatch.setattr(ff, 'ffmpeg_has_nvenc', lambda exe: True)
+    monkeypatch.setattr(ff, 'run_ffmpeg_with_progress', lambda cmd, *a, **kw: commands.append(cmd))
+    ff.encode_video('ffmpeg','silent.mp4','audio.wav','out.mp4',2,fast=True)
+    assert commands[0][commands[0].index('-preset')+1]=='p4'

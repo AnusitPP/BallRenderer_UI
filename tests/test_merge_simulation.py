@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 import pytest
-from engines.merge_engine import Ball, MergeSimulation, cli
+import numpy as np
+from engines.merge_engine import Ball, MergeSimulation, cli, align_events_to_video_frames, trim_audio_onset
 BASE=json.loads(Path(__file__).with_name('merge_baselines.json').read_text())
 @pytest.mark.parametrize('name,level',[('seed11',None),('merge',3),('victory',8)])
 def test_legacy_frames(name,level):
@@ -24,3 +25,14 @@ def test_proxy_and_percent_do_not_change_physics():
  assert [vars(x) for x in a.balls]==before
  assert a.balls[0].percent==25
  assert b.config.level_size_percent==-10
+
+
+def test_render_audio_events_align_to_visible_frame_without_changing_simulation():
+ events=[(.0125,2,False),(.029,3,False)]
+ assert align_events_to_video_frames(events,60)==[(0.0,2,False),(1/60,3,False)]
+ assert events==[(.0125,2,False),(.029,3,False)]
+
+
+def test_merge_custom_sound_leading_silence_is_trimmed():
+ clip=np.r_[np.zeros(500,dtype=np.float32),np.ones(20,dtype=np.float32)]
+ assert len(trim_audio_onset(clip,preroll_samples=0))==20

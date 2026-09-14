@@ -102,7 +102,10 @@ class DropSimulation:
             self.particles.append(DropParticle(ball.pos.copy()+offset, velocity, radius, parse_hex_color(self.config.foam_color), float(self.config.particle_life)))
         self.total_particles_created += count
         self.shatter_count += 1
-        self.audio_events.append((self.elapsed_time, 1, False))
+        # advance_frame draws the updated state as the current video frame,
+        # whose timestamp is one frame earlier than elapsed_time.
+        event_time=max(0.0,self.elapsed_time-self.dt)
+        self.audio_events.append((event_time, 1, False))
         ball.alive = False
 
     def _sync(self):
@@ -181,7 +184,7 @@ class DropSimulation:
                     chance=max(0.0,min(1.0,float(getattr(self.config,'floor_sound_chance',.5))))
                     self.floor_sound_accumulator+=chance
                     if self.floor_sound_accumulator>=1.0:
-                        self.audio_events.append((self.elapsed_time,1,True))
+                        self.audio_events.append((max(0.0,self.elapsed_time-self.dt),1,True))
                         self.floor_sound_accumulator-=1.0
                     continue
                 particle.pos[1] = self.box_bottom - particle.radius

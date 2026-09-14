@@ -3,10 +3,25 @@ import argparse
 import tempfile
 from pathlib import Path
 import cv2
+import numpy as np
 
 from audio.merge import _decode_audio_mono, _mix_audio_timeline
 from engines.drop.simulation import DropSimulation
 from render.ffmpeg import encode_video, find_ffmpeg, report_progress
+
+
+def _trim_audio_onset(clip, threshold_ratio=.008, preroll_samples=88):
+    """Remove leading silence so a selected effect starts on its event frame."""
+    if clip is None or len(clip)==0:
+        return clip
+    peak=float(np.max(np.abs(clip)))
+    if peak<=0:
+        return clip
+    audible=np.flatnonzero(np.abs(clip)>=peak*float(threshold_ratio))
+    if len(audible)==0:
+        return clip
+    start=max(0,int(audible[0])-int(preroll_samples))
+    return clip[start:]
 
 
 def cli(argv=None):
@@ -66,8 +81,8 @@ def render(args):
             if frame % max(1, frames // 100) == 0:
                 report_progress(90 * (frame + 1) / frames, 'Ball Drop Shatter')
         writer.release()
-        clip = _decode_audio_mono(args.shatter_sound_file, ffmpeg)
-        floor_clip = _decode_audio_mono(args.floor_sound_file, ffmpeg)
+        clip = _trim_audio_onset(_decode_audio_mono(args.shatter_sound_file, ffmpeg))
+        floor_clip = _trim_audio_onset(_decode_audio_mono(args.floor_sound_file, ffmpeg))
         _mix_audio_timeline(audio_path, sim.audio_events, args.seconds, args.sound_volume, clip, floor_clip)
         encode_video(ffmpeg, silent, audio_path, output, args.seconds)
         success = True

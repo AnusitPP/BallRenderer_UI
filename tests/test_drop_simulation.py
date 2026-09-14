@@ -1,4 +1,6 @@
-from engines.drop_engine import cli
+import numpy as np
+
+from engines.drop_engine import cli, _trim_audio_onset
 from engines.drop.simulation import DropSimulation, recommended_foam_count
 
 
@@ -14,6 +16,20 @@ def test_ball_falls_and_shatters_with_configured_particle_count():
     assert sim.shatter_count == 1
     assert len(sim.audio_events) == 1
     assert sim.total_particles_created == 73
+
+
+def test_shatter_sound_timestamp_matches_rendered_collision_frame():
+    args = cli(['--width','360','--height','640','--fps','20','--seconds','3','--ball-size','30','--gravity','1800','--initial-speed','800'])
+    sim = DropSimulation(args)
+    while not sim.audio_events:
+        sim.advance_frame()
+    assert abs(sim.audio_events[0][0] - (sim.frame_index - 1) / args.fps) < 1e-9
+
+
+def test_custom_effect_leading_silence_is_trimmed():
+    clip=np.r_[np.zeros(1000,dtype=np.float32),np.ones(100,dtype=np.float32)]
+    trimmed=_trim_audio_onset(clip,preroll_samples=0)
+    assert len(trimmed)==100 and trimmed[0]==1
 
 
 def test_remove_foam_on_floor_releases_particles_early():

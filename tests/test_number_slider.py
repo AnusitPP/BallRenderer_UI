@@ -16,12 +16,13 @@ def test_number_slider_supports_dragging_and_manual_numeric_entry():
     assert app is not None
 
 
-def test_merge_image_folder_picker_updates_preview_engine(tmp_path,monkeypatch):
+def test_merge_image_picker_accepts_webp_and_updates_preview_engine(tmp_path,monkeypatch):
     app=QApplication.instance() or QApplication([])
-    monkeypatch.setattr(QFileDialog,'getExistingDirectory',lambda *args: str(tmp_path))
+    image=tmp_path/'9.webp'; image.write_bytes(b'placeholder')
+    monkeypatch.setattr(QFileDialog,'getOpenFileNames',lambda *args: ([str(image)],'รูปภาพ'))
     window=MainWindow(); window.select_mode('Merge Ball'); window.choose_merge_assets()
-    assert window.merge_assets_path==str(tmp_path)
-    assert window.engine.config.assets==str(tmp_path)
+    assert window.merge_asset_files==[str(image)]
+    assert window.engine.config.asset_files==[str(image)]
     window.pipe_count.setValue(3); window._reset_engine()
     assert len(window.engine.pipe_centers)==3
     window.close(); assert app is not None

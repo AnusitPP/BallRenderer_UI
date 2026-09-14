@@ -14,7 +14,7 @@ class MergeSimulation:
         pipe_centers=[cx] if pipe_count==1 else [cx-pipe_span+(2*pipe_span*i/(pipe_count-1)) for i in range(pipe_count)]
         pipe_top=max(30,cy-R-int(H*0.22))
         opening_y=cy-R
-        skins=load_skins(args.assets)
+        skins=load_skins(args.assets,getattr(args,'asset_files',None))
         balls=[]; effects=[]; next_id=1; t=0.; spawn_t=0.; victory=False; victory_t=None
         dt=1/args.physics_hz
         rng=random.Random(args.seed)

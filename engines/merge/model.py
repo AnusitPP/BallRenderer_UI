@@ -23,13 +23,23 @@ def skin_path(folder, level):
         if f.exists(): return f
     return None
 
-def load_skins(folder):
+def load_skins(folder,asset_files=None):
     out={}
     for lv in range(1,10):
         p=skin_path(folder,lv)
         if p:
             im=cv2.imread(str(p),cv2.IMREAD_UNCHANGED)
             if im is not None: out[lv]=im
+    unnamed_level=1
+    for raw in asset_files or ():
+        p=Path(raw)
+        if p.suffix.lower() not in EXTS or not p.is_file(): continue
+        try: level=int(p.stem)
+        except ValueError:
+            level=unnamed_level; unnamed_level+=1
+        if not 1<=level<=9: continue
+        im=cv2.imread(str(p),cv2.IMREAD_UNCHANGED)
+        if im is not None: out[level]=im
     return out
 
 

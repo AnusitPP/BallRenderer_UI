@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
     """Complete PySide6 front end for all legacy renderer settings and engines."""
     def __init__(self):
         super().__init__(); self.setWindowTitle('BALL RENDERER — STUDIO V2'); self.resize(1500, 980); self.setStyleSheet(STYLESHEET); self.setFont(QFont('Arial', 10))
-        self.mode='Circle Battle'; self.engine=None; self.process=None; self._render_cancel_requested=False; self.playing=False; self.audio_file=''; self.melody_file=''; self.merge_sound_file=''; self.victory_sound_file=''; self.merge_assets_path=str(Path(__file__).resolve().parents[1]/'assets'/'balls'); self.drop_ball_image=''; self.drop_foam_image=''; self.drop_sound_file=''; self.drop_floor_sound_file=''; self.drop_foam_color='#ffffff'
+        self.mode='Circle Battle'; self.engine=None; self.process=None; self._render_cancel_requested=False; self.playing=False; self.audio_file=''; self.melody_file=''; self.merge_sound_file=''; self.victory_sound_file=''; self.merge_assets_path=str(Path(__file__).resolve().parents[1]/'assets'/'balls'); self.merge_asset_files=[]; self.drop_ball_image=''; self.drop_foam_image=''; self.drop_sound_file=''; self.drop_floor_sound_file=''; self.drop_foam_color='#ffffff'
         self._build(); self._thai_ui(); self._update_mode_visibility(); self._wire_live_controls(); self._reset_engine(); self.timer=QTimer(self); self.timer.timeout.connect(self._tick); self.timer.start(16)
     def _form(self,title):
         page=QWidget(); form=QFormLayout(page); form.setContentsMargins(16,12,16,12); form.setSpacing(8); self.tabs.addTab(page,title); return form
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
     def _build_merge(self):
         f=self._form('Merge Ball'); self.merge_interval=NumberSlider(.8,.05,20,.05,2); self.merge_gravity=NumberSlider(980,0,3000,10,0); self.merge_bounce=NumberSlider(.78,0,1.2,.01,2); self.merge_hz=NumberSlider(240,30,1000,10,0); self.tank_scale=NumberSlider(1,.5,1.5,.01,2); self.pipe_count=NumberSlider(1,1,3,1,0); self.pipe_clearance=NumberSlider(8,0,100,1,0); self.level_percent=NumberSlider(15,-50,100,1,0); self.merge_volume=NumberSlider(.8,0,2,.05,2)
         for label,w in (('ช่วงเวลาปล่อยบอล',self.merge_interval),('แรงโน้มถ่วง',self.merge_gravity),('แรงเด้ง',self.merge_bounce),('Physics Hz',self.merge_hz),('ขนาดวง',self.tank_scale),('จำนวนท่อ',self.pipe_count),('ระยะเผื่อท่อ',self.pipe_clearance),('ขนาด LV2–LV9 (%)',self.level_percent),('ระดับเสียง',self.merge_volume)): f.addRow(label,w)
-        self.merge_assets_row,self.merge_assets_label=self._file_row(self.choose_merge_assets); self.merge_assets_label.setText(self.merge_assets_path); f.addRow('รูปบอล LV1–LV9',self.merge_assets_row)
+        self.merge_assets_row,self.merge_assets_label=self._file_row(self.choose_merge_assets); self.merge_assets_label.setText('ใช้รูปเริ่มต้น 1–9 หรือกดเลือกไฟล์'); f.addRow('รูปบอล LV1–LV9',self.merge_assets_row)
         self.merge_audio=QCheckBox('Enable merge audio'); self.merge_audio.setChecked(True); f.addRow(self.merge_audio); self.merge_row,self.merge_label=self._file_row(self.choose_merge_audio); self.victory_row,self.victory_label=self._file_row(self.choose_victory_audio); f.addRow('Merge sound',self.merge_row); f.addRow('Victory sound',self.victory_row)
     def _build_output(self):
         f=self._form('Output'); self.output_edit=QLineEdit(str(Path(__file__).resolve().parents[1]/'output'/'circle_ball_final.mp4')); f.addRow('Output MP4',self.output_edit); choose=QPushButton('Choose output file…'); choose.clicked.connect(self.choose_output); f.addRow(choose); self.progress=QProgressBar(); self.progress.setRange(0,100); f.addRow('Progress',self.progress); open_btn=QPushButton('Open output folder'); open_btn.clicked.connect(self.open_output_folder); f.addRow(open_btn)
@@ -189,8 +189,8 @@ class MainWindow(QMainWindow):
         path,_=QFileDialog.getOpenFileName(self,'Choose merge sound','','Audio (*.wav *.mp3 *.m4a *.aac *.ogg *.flac);;All files (*)')
         if path: self.merge_sound_file=path; self.merge_label.setText(path)
     def choose_merge_assets(self):
-        path=QFileDialog.getExistingDirectory(self,'เลือกโฟลเดอร์รูปบอล LV1–LV9',self.merge_assets_path)
-        if path: self.merge_assets_path=path; self.merge_assets_label.setText(path); self.status.setText('ใช้ไฟล์ 1–9 จากโฟลเดอร์ที่เลือก'); self._reset_engine()
+        paths,_=QFileDialog.getOpenFileNames(self,'เลือกรูปบอล LV1–LV9',self.merge_assets_path,'รูปภาพ (*.webp *.png *.jpg *.jpeg);;ทุกไฟล์ (*)')
+        if paths: self.merge_asset_files=paths[:9]; self.merge_assets_label.setText(', '.join(Path(path).name for path in self.merge_asset_files)); self.status.setText('เลือกรูปบอลแล้ว'); self._reset_engine()
     def choose_victory_audio(self):
         path,_=QFileDialog.getOpenFileName(self,'Choose victory sound','','Audio (*.wav *.mp3 *.m4a *.aac *.ogg *.flac);;All files (*)')
         if path: self.victory_sound_file=path; self.victory_label.setText(path)
@@ -237,7 +237,7 @@ class MainWindow(QMainWindow):
     def _reset_engine(self):
         if self.mode=='Merge Ball':
             out=Path(self.output_edit.text()) if hasattr(self,'output_edit') else Path('output/merge_ball_final.mp4'); self.output_edit.setText(str(out.with_name('merge_ball_final.mp4'))) if hasattr(self,'output_edit') else None
-            argv=['--width',str(self.width.value()),'--height',str(self.height.value()),'--fps',str(self.fps.value()),'--physics-hz',str(int(self.merge_hz.value())),'--seconds',str(self.seconds.value()),'--seed',str(self.seed.value()),'--spawn-interval',str(self.merge_interval.value()),'--gravity',str(self.merge_gravity.value()),'--bounce',str(self.merge_bounce.value()),'--tank-scale',str(self.tank_scale.value()),'--pipe-count',str(int(self.pipe_count.value())),'--pipe-clearance',str(self.pipe_clearance.value()),'--level-size-percent',str(self.level_percent.value()),'--assets',self.merge_assets_path]; self.engine=MergeSimulation(merge_cli(argv)); self.engine.config.merge_sound_file=self.merge_sound_file; self.engine.config.victory_sound_file=self.victory_sound_file
+            argv=['--width',str(self.width.value()),'--height',str(self.height.value()),'--fps',str(self.fps.value()),'--physics-hz',str(int(self.merge_hz.value())),'--seconds',str(self.seconds.value()),'--seed',str(self.seed.value()),'--spawn-interval',str(self.merge_interval.value()),'--gravity',str(self.merge_gravity.value()),'--bounce',str(self.merge_bounce.value()),'--tank-scale',str(self.tank_scale.value()),'--pipe-count',str(int(self.pipe_count.value())),'--pipe-clearance',str(self.pipe_clearance.value()),'--level-size-percent',str(self.level_percent.value()),'--assets',self.merge_assets_path]; argv+=['--asset-files',*self.merge_asset_files] if self.merge_asset_files else []; self.engine=MergeSimulation(merge_cli(argv)); self.engine.config.merge_sound_file=self.merge_sound_file; self.engine.config.victory_sound_file=self.victory_sound_file
         elif self.mode=='Ball Drop Shatter':
             out=Path(self.output_edit.text()) if hasattr(self,'output_edit') else Path('output/drop_shatter_final.mp4'); self.output_edit.setText(str(out.with_name('drop_shatter_final.mp4'))) if hasattr(self,'output_edit') else None; self.engine=DropSimulation(self._drop_args())
         else:
@@ -283,6 +283,7 @@ class MainWindow(QMainWindow):
         output=Path(self.output_edit.text()); output.parent.mkdir(parents=True,exist_ok=True); self.progress.setValue(0); self.top_progress.setValue(0); self.log.append(f'--- Starting {self.mode} render ---'); self.log.append(f'Output: {output}'); self.process=QProcess(self); self.process.setWorkingDirectory(str(Path(__file__).resolve().parents[1])); self.process.readyReadStandardOutput.connect(self._read_render_output); self.process.readyReadStandardError.connect(self._read_render_error); self.process.errorOccurred.connect(self._process_error); self.process.finished.connect(self._render_finished)
         if self.mode=='Merge Ball':
             args=['-m','engines.merge_engine','--out',str(output),'--width',str(self.width.value()),'--height',str(self.height.value()),'--fps',str(self.fps.value()),'--physics-hz',str(int(self.merge_hz.value())),'--seconds',str(self.seconds.value()),'--seed',str(self.seed.value()),'--spawn-interval',str(self.merge_interval.value()),'--gravity',str(self.merge_gravity.value()),'--bounce',str(self.merge_bounce.value()),'--tank-scale',str(self.tank_scale.value()),'--pipe-count',str(int(self.pipe_count.value())),'--pipe-clearance',str(self.pipe_clearance.value()),'--level-size-percent',str(self.level_percent.value()),'--assets',self.merge_assets_path]
+            if self.merge_asset_files: args+=['--asset-files',*self.merge_asset_files]
             if self.merge_audio.isChecked():
                 args += ['--merge-sound','--merge-volume',str(self.merge_volume.value())]
                 if self.merge_sound_file: args += ['--merge-sound-file',self.merge_sound_file]

@@ -56,6 +56,15 @@ def test_level_9_custom_image_is_loaded(tmp_path):
  assert 9 in load_skins(tmp_path)
 
 
+def test_selected_webp_files_override_folder_skins(tmp_path):
+ import cv2
+ lv3=tmp_path/'3.webp'; cv2.imwrite(str(lv3),np.full((8,8,3),33,dtype=np.uint8))
+ skins=load_skins(tmp_path/'missing',[str(lv3)])
+ assert 3 in skins and int(skins[3][0,0,0])==33
+ unnamed=tmp_path/'custom.webp'; cv2.imwrite(str(unnamed),np.full((8,8,3),77,dtype=np.uint8))
+ assert int(load_skins(tmp_path,[str(unnamed)])[1][0,0,0])==77
+
+
 @pytest.mark.parametrize('pipe_count',[1,2,3])
 def test_merge_supports_one_to_three_spawn_pipes(pipe_count):
  s=MergeSimulation(cli(['--pipe-count',str(pipe_count),'--spawn-interval','.01']))

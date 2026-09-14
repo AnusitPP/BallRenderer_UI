@@ -90,6 +90,7 @@ def cli(argv=None):
     p=argparse.ArgumentParser()
     p.add_argument("--out",default="output/merge_ball.mp4")
     p.add_argument("--assets",default="assets/balls")
+    p.add_argument("--asset-files",nargs='*',default=[])
     p.add_argument("--width",type=int,default=540); p.add_argument("--height",type=int,default=960)
     p.add_argument("--fps",type=int,default=60); p.add_argument("--physics-hz",type=int,default=240)
     p.add_argument("--seconds",type=float,default=30); p.add_argument("--spawn-interval",type=float,default=.8)

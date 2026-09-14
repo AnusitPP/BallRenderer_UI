@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import importlib
 import importlib.util
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,3 +26,11 @@ def test_shared_ffmpeg_finds_current_users_downloads(tmp_path, monkeypatch):
     monkeypatch.delenv("FFMPEG_EXE", raising=False)
     monkeypatch.setattr(ffmpeg.shutil, "which", lambda _name: None)
     assert ffmpeg.find_ffmpeg() == str(exe)
+
+
+def test_every_render_entrypoint_uses_the_shared_ffmpeg_resolver():
+    from render.ffmpeg import find_ffmpeg as shared_resolver
+    modules=[renderer_main]
+    modules.extend(importlib.import_module(f'engines.{path.stem}') for path in (ROOT/'engines').glob('*_engine.py'))
+    assert modules
+    assert all(getattr(module,'find_ffmpeg',None) is shared_resolver for module in modules)

@@ -14,13 +14,15 @@ from engines.merge.simulation import MergeSimulation
 from engines.merge_engine import cli as merge_cli
 
 class NumberSlider(QWidget):
-    """Horizontal slider with a numeric readout; value() returns the real value."""
+    """Horizontal slider synchronized with an editable numeric input."""
     def __init__(self, value, minimum, maximum, step=1.0, decimals=0, parent=None):
         super().__init__(parent); self.scale = 10 ** decimals; self.decimals = decimals
         self.slider = QSlider(Qt.Horizontal); self.slider.setRange(round(minimum*self.scale), round(maximum*self.scale)); self.slider.setSingleStep(max(1, round(step*self.scale))); self.slider.setPageStep(max(1, round(step*self.scale*5))); self.slider.setValue(round(value*self.scale))
-        self.readout = QLabel(); self.readout.setMinimumWidth(58); self.readout.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        row = QHBoxLayout(self); row.setContentsMargins(0,0,0,0); row.addWidget(self.slider,1); row.addWidget(self.readout); self.slider.valueChanged.connect(self._update); self._update(self.slider.value())
-    def _update(self, raw): self.readout.setText(f'{raw/self.scale:.{self.decimals}f}')
+        self.readout = QDoubleSpinBox(); self.readout.setLocale(QLocale.c()); self.readout.setRange(float(minimum),float(maximum)); self.readout.setSingleStep(float(step)); self.readout.setDecimals(decimals); self.readout.setKeyboardTracking(False); self.readout.setMinimumWidth(88)
+        row = QHBoxLayout(self); row.setContentsMargins(0,0,0,0); row.addWidget(self.slider,1); row.addWidget(self.readout); self.slider.valueChanged.connect(self._update); self.readout.valueChanged.connect(self._from_input); self._update(self.slider.value())
+    def _update(self, raw):
+        self.readout.blockSignals(True); self.readout.setValue(raw/self.scale); self.readout.blockSignals(False)
+    def _from_input(self, value): self.slider.setValue(round(float(value)*self.scale))
     def value(self): return self.slider.value() / self.scale
     def setValue(self, value): self.slider.setValue(round(float(value)*self.scale))
     def valueChanged(self, callback): self.slider.valueChanged.connect(callback)

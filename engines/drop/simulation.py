@@ -132,17 +132,21 @@ class DropSimulation:
                     for other_index in grid.get((gx,gy),()):
                         if other_index<=index: continue
                         second=self.particles[other_index]
-                        delta=second.pos-first.pos
-                        distance=float(np.linalg.norm(delta))
+                        dx=float(second.pos[0]-first.pos[0]); dy=float(second.pos[1]-first.pos[1])
+                        distance_sq=dx*dx+dy*dy
                         minimum=first.radius+second.radius
-                        if distance>=minimum: continue
-                        normal=delta/distance if distance>1e-9 else np.array([1.0,0.0])
-                        correction=normal*((minimum-distance)*.5)
-                        first.pos-=correction; second.pos+=correction
-                        relative=float(np.dot(second.vel-first.vel,normal))
+                        if distance_sq>=minimum*minimum: continue
+                        distance=math.sqrt(distance_sq)
+                        if distance>1e-9: nx,ny=dx/distance,dy/distance
+                        else: nx,ny=1.0,0.0
+                        correction=(minimum-distance)*.5
+                        first.pos[0]-=nx*correction; first.pos[1]-=ny*correction
+                        second.pos[0]+=nx*correction; second.pos[1]+=ny*correction
+                        relative=float((second.vel[0]-first.vel[0])*nx+(second.vel[1]-first.vel[1])*ny)
                         if relative<0.0:
-                            impulse=normal*(-relative*.62)
-                            first.vel-=impulse; second.vel+=impulse
+                            impulse=-relative*.62
+                            first.vel[0]-=nx*impulse; first.vel[1]-=ny*impulse
+                            second.vel[0]+=nx*impulse; second.vel[1]+=ny*impulse
                         first.vel*=.998; second.vel*=.998
 
     def advance_frame(self):
